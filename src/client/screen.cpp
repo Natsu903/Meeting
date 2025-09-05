@@ -15,6 +15,4 @@ void Screen::init()
 
     Screen::width = s->geometry().width();
     Screen::height = s->geometry().height();
-
-//    qDebug() << Screen::width << " " << Screen::height;
 }

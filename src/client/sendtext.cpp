@@ -53,8 +53,6 @@ void SendText::run()
 
         M text = textqueue.front();
 
-//        qDebug() << "取出队列:" << QThread::currentThreadId();
-
         textqueue.pop_front();
         textqueue_lock.unlock();//解锁
         queue_waitCond.wakeOne(); //唤醒添加线程

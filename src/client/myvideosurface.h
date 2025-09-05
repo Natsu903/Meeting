@@ -10,25 +10,21 @@ class MyVideoSurface : public QAbstractVideoSurface
 public:
     MyVideoSurface(QObject *parent = 0);
 
-    //支持的像素格式
+    //支持的像素格式，返回此视频表面支持的像素格式列表
     QList<QVideoFrame::PixelFormat> supportedPixelFormats(QAbstractVideoBuffer::HandleType handleType = QAbstractVideoBuffer::NoHandle) const override;
 
-    //检测视频流的格式是否合法，返回bool
+    //检查给定的视频格式是否被支持
     bool isFormatSupported(const QVideoSurfaceFormat &format) const override;
     bool start(const QVideoSurfaceFormat &format) override;
     bool present(const QVideoFrame &frame) override;
+    // 获取视频矩形区域
     QRect videoRect() const;
     void updateVideoRect();
+    // 绘制视频帧
     void paint(QPainter *painter);
 
-//private:
-//    QWidget      * widget_;
-//    QImage::Format imageFormat_;
-//    QRect          targetRect_;
-//    QSize          imageSize_;
-//    QVideoFrame    currentFrame_;
-
 signals:
+    // 当有新帧可用时发出的信号
     void frameAvailable(QVideoFrame);
 
 };

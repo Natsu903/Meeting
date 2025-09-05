@@ -16,6 +16,7 @@ void LogQueue::run()
     m_isCanRun = true;
     for(;;)
     {
+        // 检查线程是否需要退出
         {
             QMutexLocker lock(&m_lock);
             if(m_isCanRun == false)
@@ -27,7 +28,7 @@ void LogQueue::run()
         Log *log = log_queue.pop_msg();
         if(log == NULL || log->ptr == NULL) continue;
 
-        //----------------write to logfile-------------------
+        //写入到日志文件
         errno_t r = fopen_s(&logfile, "./log.txt", "a");
         if(r != 0)
         {

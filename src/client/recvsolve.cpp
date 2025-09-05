@@ -12,6 +12,7 @@ void RecvSolve::stopImmediately()
 
 RecvSolve::RecvSolve(QObject *par):QThread(par)
 {
+    //注册MESG指针类型，使其可以在信号和槽中使用
     qRegisterMetaType<MESG *>();
     m_isCanRun = true;
 }
@@ -29,10 +30,10 @@ void RecvSolve::run()
                 return;
             }
         }
+        // 从接收队列中取出消息
         MESG * msg = queue_recv.pop_msg();
         if(msg == NULL) continue;
-		/*else free(msg);
-		qDebug() << "取出队列:" << msg->msg_type;*/
+        // 发出数据接收信号，将消息传递给连接的槽函数
         emit datarecv(msg);
     }
 }

@@ -18,12 +18,12 @@ Partner::Partner(QWidget *parent, quint32 p):QLabel(parent)
     this->setToolTip(QHostAddress(ip).toString());
 }
 
-
 void Partner::mousePressEvent(QMouseEvent *)
 {
     emit sendip(ip);
 }
 void Partner::setpic(QImage img)
 {
+    // 将传入的图像缩放后设置为标签的显示图片
     this->setPixmap(QPixmap::fromImage(img.scaled(w-10, w-10)));
 }

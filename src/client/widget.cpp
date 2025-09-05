@@ -148,7 +148,6 @@ Widget::Widget(QWidget *parent)
 
 void Widget::cameraImageCapture(QVideoFrame frame)
 {
-//    qDebug() << QThread::currentThreadId() << this;
 
     if(frame.isValid() && frame.isReadable())
     {
@@ -171,8 +170,6 @@ void Widget::cameraImageCapture(QVideoFrame frame)
 
         Partner *p = partner[_mytcpSocket->getlocalip()];
         if(p) p->setpic(img);
-
-        //qDebug()<< "format: " <<  videoImg.format() << "size: " << videoImg.size() << "byteSIze: "<< videoImg.sizeInBytes();
     }
     frame.unmap();
 }

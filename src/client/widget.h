@@ -79,7 +79,6 @@ private slots:
     void on_connServer_clicked();
     void cameraError(QCamera::Error);
     void audioError(QString);
-//    void mytcperror(QAbstractSocket::SocketError);
     void datasolve(MESG *);
     void recvip(quint32);
     void cameraImageCapture(QVideoFrame frame);

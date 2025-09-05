@@ -22,7 +22,6 @@ void SendImg::run()
 
         while(imgqueue.size() == 0)
         {
-            //qDebug() << this << QThread::currentThreadId();
             bool f = queue_waitCond.wait(&queue_lock, WAITSECONDS * 1000);
 			if (f == false) //timeout
 			{
@@ -37,7 +36,6 @@ void SendImg::run()
         }
 
         QByteArray img = imgqueue.front();
-//        qDebug() << "取出队列:" << QThread::currentThreadId();
         imgqueue.pop_front();
         queue_lock.unlock();//解锁
         queue_waitCond.wakeOne(); //唤醒添加线程

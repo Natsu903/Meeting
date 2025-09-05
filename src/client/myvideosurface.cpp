@@ -8,6 +8,7 @@ MyVideoSurface::MyVideoSurface(QObject *parent):QAbstractVideoSurface(parent)
 
 QList<QVideoFrame::PixelFormat> MyVideoSurface::supportedPixelFormats(QAbstractVideoBuffer::HandleType handleType) const
 {
+    // 如果是无句柄类型，则返回支持的像素格式列表
     if(handleType == QAbstractVideoBuffer::NoHandle)
     {
         return QList<QVideoFrame::PixelFormat>() << QVideoFrame::Format_RGB32
@@ -25,7 +26,7 @@ QList<QVideoFrame::PixelFormat> MyVideoSurface::supportedPixelFormats(QAbstractV
 
 bool MyVideoSurface::isFormatSupported(const QVideoSurfaceFormat &format) const
 {
-    // imageFormatFromPixelFormat: 返回与视频帧像素格式等效的图像格式
+    //返回与视频帧像素格式等效的图像格式,如果能转换为有效的图像格式，则认为该格式是支持的
     //pixelFormat: 返回视频流中的像素格式
     return QVideoFrame::imageFormatFromPixelFormat(format.pixelFormat()) != QImage::Format_Invalid;
 }
@@ -52,10 +53,12 @@ bool MyVideoSurface::present(const QVideoFrame &frame)
     }
     if(frame.isMapped())
     {
+        // 发射帧可用信号
         emit frameAvailable(frame);
     }
     else
     {
+        // 创建帧的副本并映射为只读模式
         QVideoFrame f(frame);
         f.map(QAbstractVideoBuffer::ReadOnly);
         emit frameAvailable(f);

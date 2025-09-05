@@ -152,13 +152,7 @@ void MyTcpSocket::sendData(MESG* send)
  */
 void MyTcpSocket::run()
 {
-    //qDebug() << "send data" << QThread::currentThreadId();
     m_isCanRun = true; //标记可以运行
-    /*
-    *$_MSGType_IPV4_MSGSize_data_# //
-    * 1 2 4 4 MSGSize 1
-    *底层写数据线程
-    */
     for(;;)
     {
         {
@@ -178,6 +172,7 @@ qint64 MyTcpSocket::readn(char * buf, quint64 maxsize, int n)
 {
     quint64 hastoread = n;
     quint64 hasread = 0;
+	//持续调用Qt的read函数读取数据到缓冲区,直到读取完指定的n字节数据或达到最大缓冲区大小
     do
     {
         qint64 ret  = _socktcp->read(buf + hasread, hastoread);
@@ -192,17 +187,14 @@ qint64 MyTcpSocket::readn(char * buf, quint64 maxsize, int n)
         hasread += ret;
         hastoread -= ret;
     }while(hastoread > 0 && hasread < maxsize);
+	//返回实际读取的字节数，出错时返回-1
     return hasread;
 }
 
 
 void MyTcpSocket::recvFromSocket()
 {
-
-    //qDebug() << "recv data socket" <<QThread::currentThread();
-    /*
-    *$_msgtype_ip_size_data_#
-    */
+	//读取可用数据到接收缓冲区
     qint64 availbytes = _socktcp->bytesAvailable();
 	if (availbytes <=0 )
 	{
@@ -216,7 +208,7 @@ void MyTcpSocket::recvFromSocket()
     }
     hasrecvive += ret;
 
-    //数据包不够
+    //检查是否收到完整的消息头部
     if (hasrecvive < MSG_HEADER)
     {
         return;
@@ -234,6 +226,7 @@ void MyTcpSocket::recvFromSocket()
 				qFromBigEndian<uint16_t>(recvbuf + 1, 2, &type);
 				msgtype = (MSG_TYPE)type;
 				qDebug() << "recv data type: " << msgtype;
+				//处理创建会议、加入会议和合作伙伴加入响应消息
 				if (msgtype == CREATE_MEETING_RESPONSE || msgtype == JOIN_MEETING_RESPONSE || msgtype == PARTNER_JOIN2)
 				{
 					if (msgtype == CREATE_MEETING_RESPONSE)
@@ -264,7 +257,6 @@ void MyTcpSocket::recvFromSocket()
 								msg->len = data_size;
 								queue_recv.push_msg(msg);
 							}
-
 						}
 					}
 					else if (msgtype == JOIN_MEETING_RESPONSE)
@@ -333,6 +325,7 @@ void MyTcpSocket::recvFromSocket()
 						}
 					}
 				}
+				//处理实时通信消息（图像、音频、文本等）
                 else if (msgtype == IMG_RECV || msgtype == PARTNER_JOIN || msgtype == PARTNER_EXIT || msgtype == AUDIO_RECV || msgtype == CLOSE_CAMERA || msgtype == TEXT_RECV)
 				{
 					//read ipv4
@@ -341,13 +334,11 @@ void MyTcpSocket::recvFromSocket()
 
 					if (msgtype == IMG_RECV)
 					{
-						//QString ss = QString::fromLatin1((char *)recvbuf + MSG_HEADER, data_len);
 						QByteArray cc((char *) recvbuf + MSG_HEADER, data_size);
 						QByteArray rc = QByteArray::fromBase64(cc);
 						QByteArray rdc = qUncompress(rc);
-						//将消息加入到接收队列
-		//                qDebug() << roomNo;
 						
+						//将消息加入到接收队列
 						if (rdc.size() > 0)
 						{
 							MESG* msg = (MESG*)malloc(sizeof(MESG));
@@ -359,7 +350,7 @@ void MyTcpSocket::recvFromSocket()
 							{
 								memset(msg, 0, sizeof(MESG));
 								msg->msg_type = msgtype;
-								msg->data = (uchar*)malloc(rdc.size()); // 10 = format + width + width
+								msg->data = (uchar*)malloc(rdc.size());
 								if (msg->data == NULL)
 								{
 									free(msg);
@@ -467,6 +458,7 @@ void MyTcpSocket::recvFromSocket()
             {
                 qDebug() << "package error";
             }
+			//移动缓冲区数据，处理下一个数据包
 			memmove_s(recvbuf, 4 * MB, recvbuf + MSG_HEADER + data_size + 1, hasrecvive - ((quint64)data_size + 1 + MSG_HEADER));
 			hasrecvive -= ((quint64)data_size + 1 + MSG_HEADER);
         }

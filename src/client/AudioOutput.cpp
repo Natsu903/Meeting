@@ -12,6 +12,7 @@ extern QUEUE_DATA<MESG> audio_recv; //音频接收队列
 AudioOutput::AudioOutput(QObject *parent)
 	: QThread(parent)
 {
+	// 设置音频格式
 	QAudioFormat format;
 	format.setSampleRate(8000);
 	format.setChannelCount(1);
@@ -20,12 +21,14 @@ AudioOutput::AudioOutput(QObject *parent)
 	format.setByteOrder(QAudioFormat::LittleEndian);
 	format.setSampleType(QAudioFormat::UnSignedInt);
 
+	// 检查默认输出设备是否支持该格式
 	QAudioDeviceInfo info = QAudioDeviceInfo::defaultOutputDevice();
 	if (!info.isFormatSupported(format))
 	{
 		qWarning() << "Raw audio format not supported by backend, cannot play audio.";
 		return;
 	}
+
 	audio = new QAudioOutput(format, this);
 	connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State) ));
 	outputdevice = nullptr;
@@ -64,10 +67,13 @@ void AudioOutput::handleStateChanged(QAudio::State state)
 {
 	switch (state)
 	{
+		// 音频设备处于活跃状态
 		case QAudio::ActiveState:
 			break;
+		// 音频设备被挂起
 		case QAudio::SuspendedState:
 			break;
+		// 音频设备已停止
 		case QAudio::StoppedState:
 			if (audio->error() != QAudio::NoError)
 			{
@@ -76,8 +82,10 @@ void AudioOutput::handleStateChanged(QAudio::State state)
 				qDebug() << "out audio error" << audio->error();
 			}
 			break;
+		// 音频设备空闲
 		case QAudio::IdleState:
 			break;
+		// 音频设备被中断
 		case QAudio::InterruptedState:
 			break;
 		default:
@@ -89,6 +97,7 @@ void AudioOutput::startPlay()
 {
 	if (audio->state() == QAudio::ActiveState) return;
 	WRITE_LOG("start playing audio");
+	// 启动音频输出设备
 	outputdevice = audio->start();
 }
 
@@ -99,6 +108,7 @@ void AudioOutput::stopPlay()
 		QMutexLocker lock(&device_lock);
 		outputdevice = nullptr;
 	}
+	// 停止音频设备
 	audio->stop();
 	WRITE_LOG("stop playing audio");
 }
@@ -111,6 +121,7 @@ void AudioOutput::run()
 	WRITE_LOG("start playing audio thread 0x%p", QThread::currentThreadId());
 	for (;;)
 	{
+		// 检查线程是否需要退出
 		{
 			QMutexLocker lock(&m_lock);
 			if (is_canRun == false)
@@ -120,17 +131,21 @@ void AudioOutput::run()
 				return;
 			}
 		}
+
+		// 从音频接收队列中取出消息
 		MESG* msg = audio_recv.pop_msg();
 		if (msg == NULL) continue;
 		{
+			// 处理音频数据
 			QMutexLocker lock(&device_lock);
 			if (outputdevice != nullptr)
 			{
+				// 将数据添加到缓冲区
 				m_pcmDataBuffer.append((char*)msg->data, msg->len);
 
 				if (m_pcmDataBuffer.size() >= FRAME_LEN_125MS)
 				{
-					//写入音频数据
+					//写入音频数据到设备
 					qint64 ret = outputdevice->write(m_pcmDataBuffer.data(), FRAME_LEN_125MS);
 					if (ret < 0)
 					{
@@ -146,9 +161,11 @@ void AudioOutput::run()
 			}
 			else
 			{
+				// 输出设备为空时清空缓冲区
 				m_pcmDataBuffer.clear();
 			}
 		}
+		// 释放消息内存
 		if (msg->data) free(msg->data);
 		if (msg) free(msg);
 	}

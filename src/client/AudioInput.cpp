@@ -10,9 +10,11 @@ extern QUEUE_DATA<MESG> queue_recv;
 AudioInput::AudioInput(QObject *parent)
 	: QObject(parent)
 {
+	// 分配2MB的音频数据接收缓冲区
 	recvbuf = (char*)malloc(MB * 2);
+
+	// 设置音频格式
 	QAudioFormat format;
-	//set format
 	format.setSampleRate(8000);
 	format.setChannelCount(1);
 	format.setSampleSize(16);
@@ -20,13 +22,16 @@ AudioInput::AudioInput(QObject *parent)
 	format.setByteOrder(QAudioFormat::LittleEndian);
 	format.setSampleType(QAudioFormat::UnSignedInt);
 
+	// 检查默认输入设备是否支持该格式
 	QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
 	if (!info.isFormatSupported(format))
 	{
 		qWarning() << "Default format not supported, trying to use the nearest.";
 		format = info.nearestFormat(format);
 	}
+	// 创建音频输入对象
 	audio = new QAudioInput(format, this);
+	// 状态变化
 	connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
 
 }
@@ -36,14 +41,17 @@ AudioInput::~AudioInput()
 	delete audio;
 }
 
+//开始音频采集
 void AudioInput::startCollect()
 {
 	if (audio->state() == QAudio::ActiveState) return;
 	WRITE_LOG("start collecting audio");
+
 	inputdevice = audio->start();
 	connect(inputdevice, SIGNAL(readyRead()), this, SLOT(onreadyRead()));
 }
 
+//停止音频采集
 void AudioInput::stopCollect()
 {
 	if (audio->state() == QAudio::StoppedState) return;
@@ -53,10 +61,12 @@ void AudioInput::stopCollect()
 	inputdevice = nullptr;
 }
 
+//处理音频数据就绪
 void AudioInput::onreadyRead()
 {
 	static int num = 0, totallen  = 0;
 	if (inputdevice == nullptr) return;
+	// 从设备读取音频数据
 	int len = inputdevice->read(recvbuf + totallen, 2 * MB - totallen);
 	if (num < 2)
 	{
@@ -64,8 +74,10 @@ void AudioInput::onreadyRead()
 		num++;
 		return;
 	}
+	// 累积数据长度
 	totallen += len;
 	qDebug() << "totallen = " << totallen;
+
 	MESG* msg = (MESG*)malloc(sizeof(MESG));
 	if (msg == nullptr)
 	{
@@ -74,12 +86,12 @@ void AudioInput::onreadyRead()
 	else
 	{
 		memset(msg, 0, sizeof(MESG));
-		msg->msg_type = AUDIO_SEND;
+		msg->msg_type = AUDIO_SEND;// 设置消息类型为音频发送
 		//压缩数据，转base64
 		QByteArray rr(recvbuf, totallen);
 		QByteArray cc = qCompress(rr).toBase64();
 		msg->len = cc.size();
-
+		// 分配数据内存并复制
 		msg->data = (uchar*)malloc(msg->len);
 		if (msg->data == nullptr)
 		{
@@ -89,7 +101,7 @@ void AudioInput::onreadyRead()
 		{
 			memset(msg->data, 0, msg->len);
 			memcpy_s(msg->data, msg->len, cc.data(), cc.size());
-			queue_send.push_msg(msg);
+			queue_send.push_msg(msg);// 将消息加入发送队列
 		}
 	}
 	totallen = 0;
@@ -120,6 +132,7 @@ QString AudioInput::errorString()
 	}
 }
 
+//处理音频设备状态变化
 void AudioInput::handleStateChanged(QAudio::State newState)
 {
 	switch (newState)

@@ -9,10 +9,12 @@
 
 ChatMessage::ChatMessage(QWidget *parent) : QWidget(parent)
 {
+    
     QFont te_font = this->font();
     te_font.setFamily("MicrosoftYaHei");
     te_font.setPointSize(12);
     this->setFont(te_font);
+
     m_leftPixmap = QPixmap(":/myImage/1.jpg");
     m_rightPixmap = QPixmap(":/myImage/1.jpg");
 
@@ -152,21 +154,20 @@ void ChatMessage::paintEvent(QPaintEvent *event)
     painter.setPen(Qt::NoPen);
     painter.setBrush(QBrush(Qt::gray));
 
-    if(m_userType == User_Type::User_She) { // 用户
-        //头像
-//        painter.drawRoundedRect(m_iconLeftRect,m_iconLeftRect.width(),m_iconLeftRect.height());
+    if(m_userType == User_Type::User_She) { // 其他用户发送的消息
+        // 绘制头像
         painter.drawPixmap(m_iconLeftRect, m_leftPixmap);
 
-        //框加边
+        // 绘制消息框边框
         QColor col_KuangB(234, 234, 234);
         painter.setBrush(QBrush(col_KuangB));
         painter.drawRoundedRect(m_kuangLeftRect.x()-1,m_kuangLeftRect.y()-1 + 10,m_kuangLeftRect.width()+2,m_kuangLeftRect.height()+2,4,4);
-        //框
+        // 绘制消息框
         QColor col_Kuang(255,255,255);
         painter.setBrush(QBrush(col_Kuang));
         painter.drawRoundedRect(m_kuangLeftRect,4,4);
 
-        //三角
+        // 绘制左侧气泡三角形
         QPointF points[3] = {
             QPointF(m_sanjiaoLeftRect.x(), 40),
             QPointF(m_sanjiaoLeftRect.x()+m_sanjiaoLeftRect.width(), 35),
@@ -177,15 +178,14 @@ void ChatMessage::paintEvent(QPaintEvent *event)
         painter.setPen(pen);
         painter.drawPolygon(points, 3);
 
-        //三角加边
+        // 绘制三角形边框
         QPen penSanJiaoBian;
         penSanJiaoBian.setColor(col_KuangB);
         painter.setPen(penSanJiaoBian);
         painter.drawLine(QPointF(m_sanjiaoLeftRect.x() - 1, 30), QPointF(m_sanjiaoLeftRect.x()+m_sanjiaoLeftRect.width(), 24));
         painter.drawLine(QPointF(m_sanjiaoLeftRect.x() - 1, 30), QPointF(m_sanjiaoLeftRect.x()+m_sanjiaoLeftRect.width(), 36));
 
-        //ip
-        //ip
+        // 绘制IP地址
         QPen penIp;
         penIp.setColor(Qt::darkGray);
         painter.setPen(penIp);
@@ -195,7 +195,7 @@ void ChatMessage::paintEvent(QPaintEvent *event)
         painter.setFont(f);
         painter.drawText(m_ipLeftRect, m_ip, op);
 
-        //内容
+        // 绘制消息文本
         QPen penText;
         penText.setColor(QColor(51,51,51));
         painter.setPen(penText);
@@ -203,17 +203,16 @@ void ChatMessage::paintEvent(QPaintEvent *event)
         option.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
         painter.setFont(this->font());
         painter.drawText(m_textLeftRect, m_msg,option);
-    }  else if(m_userType == User_Type::User_Me) { // 自己
-        //头像
-//        painter.drawRoundedRect(m_iconRightRect,m_iconRightRect.width(),m_iconRightRect.height());
+    }  else if(m_userType == User_Type::User_Me) { // 自己发送的消息
+        // 绘制头像
         painter.drawPixmap(m_iconRightRect, m_rightPixmap);
 
-        //框
+        // 绘制消息框
         QColor col_Kuang(75,164,242);
         painter.setBrush(QBrush(col_Kuang));
         painter.drawRoundedRect(m_kuangRightRect,4,4);
 
-        //三角
+        // 绘制右侧气泡三角形
         QPointF points[3] = {
             QPointF(m_sanjiaoRightRect.x()+m_sanjiaoRightRect.width(), 40),
             QPointF(m_sanjiaoRightRect.x(), 35),
@@ -235,7 +234,7 @@ void ChatMessage::paintEvent(QPaintEvent *event)
         painter.setFont(f);
         painter.drawText(m_ipRightRect, m_ip, op);
 
-        //内容
+        // 绘制消息文本
         QPen penText;
         penText.setColor(Qt::white);
         painter.setPen(penText);
@@ -243,7 +242,7 @@ void ChatMessage::paintEvent(QPaintEvent *event)
         option.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
         painter.setFont(this->font());
         painter.drawText(m_textRightRect,m_msg,option);
-    }  else if(m_userType == User_Type::User_Time) { // 时间
+    }  else if(m_userType == User_Type::User_Time) { // 时间消息
         QPen penText;
         penText.setColor(QColor(153,153,153));
         painter.setPen(penText);

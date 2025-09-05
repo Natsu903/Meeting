@@ -17,8 +17,10 @@ private:
     QMutex m_lock;
     bool m_isCanRun;
 signals:
+    // 数据接收信号，当从队列中取出数据时发出
     void datarecv(MESG *);
 public slots:
+    // 立即停止线程槽函数
     void stopImmediately();
 };
 
